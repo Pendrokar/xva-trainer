@@ -3,6 +3,7 @@ os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ["NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
+import glob
 import json
 import argparse
 import traceback
@@ -1117,7 +1118,7 @@ class xVAPitchTrainer(object):
         parser.add_argument('--ft_weight', type=int, default=20)
         parser.add_argument('--do_loss_sorting', type=int, default=1)
         parser.add_argument('--data', default="")
-        args = parser.parse_args()
+        args = parser.parse_args([])
         return args
 
     def get_training_metadata(self, gpus):
@@ -1361,6 +1362,10 @@ class xVAPitchTrainer(object):
 
 
     async def preprocess_audio(self):
+        if os.path.exists(self.dataset_input+"/wavs_postprocessed"):
+            if len(glob.glob(self.dataset_input+"/wavs_postprocessed/*.wav")) == len(glob.glob(self.dataset_input+"/wavs/*.wav")):
+                self.print_and_log(f'Skipping pre-processing ', save_to_file=self.dataset_output)
+                return
         self.print_and_log(f'Pre-processing audio ', save_to_file=self.dataset_output)
 
         if os.path.exists(self.dataset_input+"/wavs_postprocessed"):
@@ -1497,7 +1502,7 @@ class xVAPitchModel(object):
         parser.add_argument('--ft_weight', type=int, default=20)
         parser.add_argument('--do_loss_sorting', type=int, default=1)
         parser.add_argument('--data', default="")
-        args = parser.parse_args()
+        args = parser.parse_args([])
         return args
 
 

@@ -12,7 +12,8 @@ if platform.system() == 'Linux':
     import pyximport
     pyximport.install(setup_args={"script_args" : ["--verbose"]})
 
-if __name__ == '__main__':
+
+if __name__ == '__main__' or '--headless' in sys.argv:
     multiprocessing.freeze_support()
 
     PROD = 'xVATrainer.exe' in os.listdir(".")
@@ -355,28 +356,30 @@ if __name__ == '__main__':
                 print(traceback.format_exc())
                 logger.info(traceback.format_exc())
 
-    try:
-        server = HTTPServer(("",SERVER_PORT), Handler)
-    except:
-        with open("./DEBUG_server_error.txt", "w+") as f:
-            f.write(traceback.format_exc())
-        logger.info(traceback.format_exc())
+    headless = '--headless' in sys.argv
+    if not headless:
+        try:
+            server = HTTPServer(("",SERVER_PORT), Handler)
+        except:
+            with open("./DEBUG_server_error.txt", "w+") as f:
+                f.write(traceback.format_exc())
+            logger.info(traceback.format_exc())
 
-    try:
-        logger.info("About to start websocket")
-        _thread.start_new_thread(startWebSocket, ())
-        logger.info(f'Started websocket | Port: {WEBSOCKET_PORT}')
+        try:
+            logger.info("About to start websocket")
+            _thread.start_new_thread(startWebSocket, ())
+            logger.info(f'Started websocket | Port: {WEBSOCKET_PORT}')
 
-        # plugin_manager.run_plugins(plist=plugin_manager.plugins["start"]["post"], event="post start", data=None)
-        print("Server ready")
-        logger.info(f'Server ready | Port: {SERVER_PORT}')
-        server.serve_forever()
+            # plugin_manager.run_plugins(plist=plugin_manager.plugins["start"]["post"], event="post start", data=None)
+            print("Server ready")
+            logger.info(f'Server ready | Port: {SERVER_PORT}')
+            server.serve_forever()
 
 
-    except KeyboardInterrupt:
-        pass
-    except:
-        with open("./DEBUG_websocket_server_error.txt", "w+") as f:
-            f.write(traceback.format_exc())
-        logger.info(traceback.format_exc())
-    server.server_close()
+        except KeyboardInterrupt:
+            pass
+        except:
+            with open("./DEBUG_websocket_server_error.txt", "w+") as f:
+                f.write(traceback.format_exc())
+            logger.info(traceback.format_exc())
+        server.server_close()
