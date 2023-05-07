@@ -286,7 +286,7 @@ def _espeak_exe(base_dir, args: List, sync=False) -> List[str]:
 
     try:
         with subprocess.Popen(
-            " ".join(cmd),
+            cmd,
             # cmd,
             # f'F:/Speech/espeak/eSpeak_NG/espeak-ng.exe --path="F:/Speech/espeak/eSpeak_NG" -q -b 1 -v ro --ipa=1 "bună ziua. Ce mai faceți?"',
             # F:/Speech/espeak/eSpeak_NG/espeak-ng.exe --path="F:/Speech/espeak/eSpeak_NG" -q -b 1 -v ro --ipa=1 "bună ziua. Ce mai faceți?"
