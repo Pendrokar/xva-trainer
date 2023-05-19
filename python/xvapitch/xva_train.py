@@ -918,6 +918,7 @@ class xVAPitchTrainer(object):
         old_ckpts = sorted([fname for fname in os.listdir(self.dataset_output) if fname.startswith("xVAPitch_") and " - " not in fname], key=sort_xvap)
         if len(old_ckpts)>2:
             for ckpt in old_ckpts[:-2]:
+                open(f'{self.dataset_output}/{ckpt}', 'w').close() # Google Drive storage trick, empty the file first so it doesn't take up space in the trash
                 os.remove(f'{self.dataset_output}/{ckpt}')
 
         # Log the epoch summary
