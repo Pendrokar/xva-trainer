@@ -903,7 +903,11 @@ def read_datasets (languages, dataset_roots, extract_embs, device, data_mult=1, 
         embs_folder_exists = os.path.exists(f'{dataset_path}/se_embs')
 
         with open(f'{dataset_path}/metadata.csv', encoding="utf8") as f:
-            lines = f.read().splitlines()
+            try:
+                lines = f.read().splitlines()
+            except:
+                print(f'Failure reading {dataset_path}/metadata.csv')
+                raise
 
         if not cmd_training and trainer:
             print_line = f'Reading datasets | Dataset {di+1}/{len(all_datasets)} | Items {len(lines)}     '
