@@ -162,7 +162,7 @@ async def handleTrainer (models_manager, data, websocket, gpus, resume=False):
             torch.cuda.empty_cache()
             trainer.print_and_log(f'Out of VRAM', save_to_file=trainer.dataset_output)
 
-            DO_LOWER_BATCHSIZE_REATTEMPT = False # This doesn't seem to work. I guess the cache isn't being cleared properly
+            DO_LOWER_BATCHSIZE_REATTEMPT = False # This doesn't seem to work. I guess the cache isn't being cleared properly, or takes too long
             if DO_LOWER_BATCHSIZE_REATTEMPT:
                 if running:
                     trainer.print_and_log(f'============= Reducing base batch size from {trainer.batch_size} to {trainer.batch_size-3}', save_to_file=trainer.dataset_output)
@@ -188,7 +188,6 @@ async def handleTrainer (models_manager, data, websocket, gpus, resume=False):
             trainer.print_and_log(f'Finished training stage {stageFinished}...\n', save_to_file=trainer.dataset_output)
             trainer.JUST_FINISHED_STAGE = False
             trainer.is_init = False
-            del trainer
             try:
                 del models_manager.models_bank["xvapitch"]
             except:
@@ -198,6 +197,8 @@ async def handleTrainer (models_manager, data, websocket, gpus, resume=False):
             #     models_manager.models_bank["xvapitch"] = "move to hifi"
             #     return "move to hifi"
             # else:
+            await trainer.websocket.send(f'Finished training\n')
+            del trainer
             return #await handleTrainer(models_manager, data, websocket, gpus)
         else:
             try:
@@ -441,6 +442,7 @@ class xVAPitchTrainer(object):
         self.gam_num_frames = 0
         self.finetune_counter = 0
         self.training_iters = 0
+        self.do_samples_output = False
         self.start_new_epoch()
 
         if self.websocket:
@@ -503,12 +505,12 @@ class xVAPitchTrainer(object):
         # Will refine with more voices trained and evaluated
         NATE_DELTA = 0.0002
         NATE_NUMFILES = 8000
-        mult = NATE_NUMFILES/num_data_lines
+        mult = NATE_NUMFILES/(num_data_lines*1.25)
         if (mult-1) < 1:
             target_delta = NATE_DELTA * math.sqrt(mult)/1.5
         else:
             target_delta = NATE_DELTA * math.sqrt((mult-1))/1.5
-        target_delta *= 0.5
+        target_delta *= 0.3
         target_deltas.append(target_delta)
 
         return target_deltas
@@ -598,6 +600,7 @@ class xVAPitchTrainer(object):
 
         if not self.is_init:
             await self.init()
+
 
 
         # Sample the next data point, either from the finetune dataset, or the priors dataset
@@ -831,7 +834,7 @@ class xVAPitchTrainer(object):
                                 raise
                     else:
                         self.target_patience_count = 0
-                    round(loss_delta*100, 3)
+                    # round(loss_delta*100, 3)
 
 
                 else:
@@ -839,7 +842,8 @@ class xVAPitchTrainer(object):
 
 
                 output_path = f'{self.dataset_output}/xVAPitch_{self.total_steps_done}.pt'
-                self.output_samples(f'{self.dataset_output}/viz/{self.total_steps_done}')
+                self.do_samples_output = True # Don't do here, as there's still stuff loaded in VRAM at this point, and adding the visualizations on top might OOM unnecessarily
+
                 if not has_saved:
                     self.save_checkpoint(frames_s=frames_per_second, avg_loss=avg_loss, loss_delta=loss_delta, fpath=output_path, ckpt_time=ckpt_time, doPrintLog=True)
 
@@ -884,6 +888,9 @@ class xVAPitchTrainer(object):
 
         del batch, loss_dict
 
+        if self.do_samples_output:
+            self.do_samples_output = False
+            self.output_samples(f'{self.dataset_output}/viz/{self.total_steps_done}')
 
         if self.running:
             await self.iteration()
@@ -913,6 +920,7 @@ class xVAPitchTrainer(object):
 
 
     def save_checkpoint (self, frames_s=0, avg_loss=None, loss_delta=None, fpath="out.pt", ckpt_time=None, doPrintLog=True):
+        torch.cuda.empty_cache()
 
         # Clear out the oldest checkpoint(s), to only keep a rolling window of the latest few checkpoints
         old_ckpts = sorted([fname for fname in os.listdir(self.dataset_output) if fname.startswith("xVAPitch_") and " - " not in fname], key=sort_xvap)
@@ -956,7 +964,7 @@ class xVAPitchTrainer(object):
 
         if avg_loss is not None:
             print_line += f' | Loss: {(int(avg_loss*100000)/100000):.5f}'
-        if loss_delta is not None and loss_delta>0:
+        if loss_delta is not None:# and loss_delta>0:
             # print_line += f' | Delta: {(int(loss_delta*100000)/100000):.5f}'
             print_line += f' | Delta: {round(loss_delta*100, 3)}'
         if self.model.training_stage<=2 and loss_delta is not None and loss_delta>0:
@@ -1330,8 +1338,7 @@ class xVAPitchTrainer(object):
 
         embeddings = []
         embeddings.append(torch.tensor(self.ft_dataset_emb).squeeze().to(self.device).float()) # Add the main voice embedding style
-        # Add a few more so there's 5 in total
-        for emb in self.other_centroids[:4]:
+        for emb in self.other_centroids:
             embeddings.append(torch.tensor(emb).squeeze().to(self.device).float())
 
 
@@ -1358,15 +1365,20 @@ class xVAPitchTrainer(object):
 
                     out_path = f'{output_folder}/{lang}_{ei}_tts.wav'
                     scipy.io.wavfile.write(out_path, 22050, wav_norm.astype(np.int16))
+                    del wav
+                del language_id_tensor, text_inputs
 
+        del embeddings
         torch.cuda.empty_cache()
 
 
     async def preprocess_audio(self):
         if os.path.exists(self.dataset_input+"/wavs_postprocessed"):
-            if len(glob.glob(self.dataset_input+"/wavs_postprocessed/*.wav")) == len(glob.glob(self.dataset_input+"/wavs/*.wav")):
-                self.print_and_log(f'Skipping pre-processing ', save_to_file=self.dataset_output)
+            post_processed_files = os.listdir(self.dataset_input+"/wavs_postprocessed")
+            orig_files = os.listdir(self.dataset_input+"/wavs")
+            if len(post_processed_files) == len(orig_files):
                 return
+
         self.print_and_log(f'Pre-processing audio ', save_to_file=self.dataset_output)
 
         if os.path.exists(self.dataset_input+"/wavs_postprocessed"):
