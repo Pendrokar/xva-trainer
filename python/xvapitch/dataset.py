@@ -903,7 +903,7 @@ def read_datasets (languages, dataset_roots, extract_embs, device, data_mult=1, 
         embs_folder_exists = os.path.exists(f'{dataset_path}/se_embs')
 
         with open(f'{dataset_path}/metadata.csv', encoding="utf8") as f:
-            lines = f.read().split("\n")[:-2]
+            lines = f.read().splitlines()
 
         if not cmd_training and trainer:
             print_line = f'Reading datasets | Dataset {di+1}/{len(all_datasets)} | Items {len(lines)}     '
@@ -991,7 +991,7 @@ def pre_cache_g2p (dataset_roots, lang=None):
     for mfi,metadata_file in enumerate(all_datasets):
         lang = metadata_file.split("/")[-2].split("_")[0] if lang is None else lang
         with open(metadata_file, "r", encoding="utf8") as f:
-            lines = f.read().split("\n")
+            lines = f.read().splitlines()
             for li,line in enumerate(lines):
 
                 print(f'\rPre-extracting g2p | Dataset: {mfi}/{len(all_datasets)} | Line {li+1}/{len(lines)}   ', end="", flush=True)
