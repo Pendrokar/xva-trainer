@@ -991,7 +991,11 @@ def pre_cache_g2p (dataset_roots, lang=None):
     for mfi,metadata_file in enumerate(all_datasets):
         lang = metadata_file.split("/")[-2].split("_")[0] if lang is None else lang
         with open(metadata_file, "r", encoding="utf8") as f:
-            lines = f.read().splitlines()
+            try:
+                lines = f.read().splitlines()
+            except:
+                print(f'Failure reading {metadata_file}')
+                raise
             for li,line in enumerate(lines):
 
                 print(f'\rPre-extracting g2p | Dataset: {mfi}/{len(all_datasets)} | Line {li+1}/{len(lines)}   ', end="", flush=True)
