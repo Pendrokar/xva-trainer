@@ -37,8 +37,9 @@ message = {'model': '',
                'bkp_every_x': args.backup_every_x,
                'lang': args.lang,
                'rowElem': {},
-               'force_stage': args.force_stage,
            }}
+if args.force_stage:
+    message['data']['force_stage'] = args.force_stage
 print(message)
 model = message["model"]
 # gpus = [int(g) for g in message["gpus"].split(",")] if "gpus" in message else [0]
