@@ -21,6 +21,7 @@ parser.add_argument('--batch_size', default=8, type=int, required=False)
 parser.add_argument('--num_workers', default=3, type=int, required=False)
 parser.add_argument('--backup_every_x', default=2, type=int, required=False)
 parser.add_argument('--lang', default='en', required=False)
+parser.add_argument('--force_stage', default=None, required=False, choices=['1', '2', '3'])
 args = parser.parse_args()
 
 message = {'model': '',
@@ -35,7 +36,8 @@ message = {'model': '',
                'batch_size': args.batch_size,
                'bkp_every_x': args.backup_every_x,
                'lang': args.lang,
-               'rowElem': {}
+               'rowElem': {},
+               'force_stage': args.force_stage,
            }}
 print(message)
 model = message["model"]
