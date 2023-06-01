@@ -12,7 +12,7 @@ class DummySocket:
         print(msg)
 
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(allow_abbrev=False)
 parser.add_argument('--headless', action='store_true', required=False)
 parser.add_argument('--dataset_path', required=False)
 parser.add_argument('--output_path', required=False)

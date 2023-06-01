@@ -1086,7 +1086,7 @@ class xVAPitchTrainer(object):
         return epoch, total_steps_done, avg_disc_loss_per_epoch, avg_disc_loss_per_epoch_deltas
 
     def get_argparse(self):
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(allow_abbrev=False)
         parser.add_argument('-gpus', default="1")
         parser.add_argument("-bs", '--batch_size', type=int, default=25)
         parser.add_argument("--lr", type=float, default=0.000175)
@@ -1465,7 +1465,7 @@ class xVAPitchModel(object):
         return ""
 
     def get_argparse(self):
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(allow_abbrev=False)
         parser.add_argument('-gpus', default="1")
         parser.add_argument("-bs", '--batch_size', type=int, default=25)
         parser.add_argument("--lr", type=float, default=0.000175)
