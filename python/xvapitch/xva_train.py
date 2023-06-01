@@ -1131,7 +1131,7 @@ class xVAPitchTrainer(object):
         parser.add_argument('--ft_weight', type=int, default=20)
         parser.add_argument('--do_loss_sorting', type=int, default=1)
         parser.add_argument('--data', default="")
-        args = parser.parse_known_args()
+        args, _ = parser.parse_known_args()
         return args
 
     def get_training_metadata(self, gpus):
@@ -1510,7 +1510,7 @@ class xVAPitchModel(object):
         parser.add_argument('--ft_weight', type=int, default=20)
         parser.add_argument('--do_loss_sorting', type=int, default=1)
         parser.add_argument('--data', default="")
-        args = parser.parse_known_args()
+        args, _ = parser.parse_known_args()
         return args
 
 
