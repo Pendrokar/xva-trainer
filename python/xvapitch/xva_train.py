@@ -310,7 +310,7 @@ class xVAPitchTrainer(object):
         # self.TTSDataset = TTSDataset
         # self.TTSCollate = TTSCollate
 
-        self.save_step = 50 #100 # TODO, make a UI option for this
+        self.save_step = 30 #100 # TODO, make a UI option for this
         self.do_loss_sorting = True # maybe TODO, add UI toggle for it?
         self.FINETUNE_WEIGHT = 20
 
