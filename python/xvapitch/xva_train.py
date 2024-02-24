@@ -890,10 +890,10 @@ class xVAPitchTrainer(object):
 
         del batch, loss_dict
 
-        if self.do_samples_output:
-            self.do_samples_output = False
-            with torch.cuda.amp.autocast(enabled=self.amp):
-                self.output_samples(f'{self.dataset_output}/viz/{self.total_steps_done}')
+        # if self.do_samples_output:
+        #     self.do_samples_output = False
+        #     with torch.cuda.amp.autocast(enabled=self.amp):
+        #         self.output_samples(f'{self.dataset_output}/viz/{self.total_steps_done}')
 
         if self.running:
             await self.iteration()
